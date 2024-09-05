@@ -37,7 +37,7 @@ export const register = async (req, res, next) => {
   export const verifyAccount = async(req, res, next) => {
     try {
       const { vtoken: token, uid: userId } = req.params;
-      console.log(`Token: ${token}, User ID: ${userId}`);
+     
   
       const verified = await Verify.findOne({ token, userId });
       if (!verified) {
@@ -76,7 +76,7 @@ export const login = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email });
-    console.log(user)
+    
     if (!user) {
       return res.status(400).json({ error: "Email or Password is incorrect" });
     }

@@ -3,7 +3,7 @@ import { createError } from "../utils/helper.js";
 import { verifyToken } from "../utils/jwt.js";
 
 export const authenticateUser = async (req, res, next) => {
-  console.log("cookie: ", req.headers.cookie);
+
   try {
     const cookies = req.headers.cookie;
     if (!cookies) {
@@ -28,14 +28,13 @@ export const authenticateUser = async (req, res, next) => {
     const user = await User.findById(token_payload.id); 
     
     if (!user) {
-      console.log("error")
+      
       throw createError("User not found!", 404);
     }
 
     req.token_payload = token_payload; 
     next();
   } catch (error) {
-    console.log("from error", error)
     next(error);
   }
 };
@@ -44,7 +43,6 @@ export const authorizeRoles = (...allowed_roles) => {
   return async (req, res, next) => {
     try {
       const userId = req.token_payload.id; 
-      console.log("userId: ", userId)
       const user = await User.findById(userId);
       
       if (!user) {

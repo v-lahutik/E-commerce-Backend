@@ -39,7 +39,6 @@ export const sendEmail = async (user, token) => {
       html: emailTemplate(user.firstName, token.token, user._id),
     });
 
-    console.log("Email sent:", info.response); 
 
   } catch (error) {
     console.error("Error sending email:", error);
