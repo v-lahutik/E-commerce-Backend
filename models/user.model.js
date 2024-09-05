@@ -40,7 +40,6 @@ const userSchema = new Schema({
   
 },{timestamps: true});
 
-/* Middleware for hashing the password */
 userSchema.pre("save", async function (next) {
   try {
     if (!this.isModified("password")) {
@@ -56,7 +55,6 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// compare plain password with hashed value
 userSchema.methods.comparePass = async function (plainPassword) {
   return await bcrypt.compare(plainPassword, this.password);
 };

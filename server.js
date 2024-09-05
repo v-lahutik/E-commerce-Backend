@@ -21,7 +21,7 @@ app.use(cors())
 //routers
 app.use('/users', userRouter);
 app.use('/products', productRouter);
-app.use('/category', categoryRouter);
+app.use('/categories', categoryRouter);
 
 //error handlers
 app.use((req, res, next) => {
