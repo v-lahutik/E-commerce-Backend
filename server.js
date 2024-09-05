@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { connectToDB } from './utils/database.js';
 import userRouter from './routers/user.router.js';
+import {createError} from './utils/helper.js';
+import productRouter from './routers/product.router.js';
+import categoryRouter from './routers/category.router.js';
 
 
 dotenv.config();
@@ -17,6 +20,8 @@ app.use(cors())
 
 //routers
 app.use('/users', userRouter);
+app.use('/products', productRouter);
+app.use('/category', categoryRouter);
 
 //error handlers
 app.use((req, res, next) => {

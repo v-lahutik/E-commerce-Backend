@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
-import { createToken, verifyToken } from "../utils/jwt.js";
-import { sendEmail } from "../utils/helper.js";
-import { createError } from "../utils/helper.js";
+import { createToken } from "../utils/jwt.js";
+import { createError, generateVerificationToken, sendEmail } from "../utils/helper.js";
+import Verify from "../models/verify.model.js";
 
 export const register = async (req, res, next) => {
     try {
@@ -17,15 +17,7 @@ export const register = async (req, res, next) => {
       }
   
       const newUser = await User.create({ firstName, lastName, email, password });
-  
-      // Generate verification token
-      const verificationToken = await createToken(
-        { id: newUser._id },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-      );
-  
-      // Send verification email
+      const verificationToken = await generateVerificationToken(newUser);
       await sendEmail(newUser, verificationToken);
   
       res.status(201).json({
@@ -42,34 +34,37 @@ export const register = async (req, res, next) => {
     }
   };
 
-  export const verifyAccount = async (req, res, next) => {
+  export const verifyAccount = async(req, res, next) => {
     try {
-        const { vtoken, uid } = req.params;
-
-        // Verify the token
-        const decoded = await verifyToken(vtoken, process.env.JWT_SECRET);
-        if (decoded.id !== uid) {
-            return next(createError("Invalid token or user ID", 400));
-        }
-
-        // Activate the user's account
-        const user = await User.findById(uid);
-        if (!user) {
-            return next(createError("User not found", 400));
-        }
-
-        if (user.is_activated) {
-            return next(createError("User already activated", 400));
-        }
-
-        user.is_activated = true;
-        await user.save();
-
-        res.status(200).json({ message: "Account verified successfully" });
+      const { vtoken: token, uid: userId } = req.params;
+      console.log(`Token: ${token}, User ID: ${userId}`);
+  
+      const verified = await Verify.findOne({ token, userId });
+      if (!verified) {
+        throw createError('Verification link is not valid or has expired.', 401);
+      }
+  
+      const user = await User.findById(userId);
+      if (!user) {
+        throw createError('User not found or already deleted.', 404);
+      }
+  
+      if (user.is_activated) {
+        throw createError('User account is already activated.', 400);
+      }
+  
+      user.is_activated = true;
+      await user.save();
+  
+       res.status(200).json({
+      status: 'verify-account-success',
+      message: 'Your account has been successfully verified.',
+    });
     } catch (error) {
-        next(error);
+      next(error);
     }
-};
+  };
+  
 
 export const login = async (req, res, next) => {
   try {
@@ -81,10 +76,13 @@ export const login = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email });
+    console.log(user)
     if (!user) {
       return res.status(400).json({ error: "Email or Password is incorrect" });
     }
-
+    if (!user.is_activated) {
+      return res.status(403).json({ error: "Please verify your email before logging in." });
+    }
     const isMatch = await user.comparePass(password);
     if (!isMatch) {
       return res.status(400).json({ error: "Email or Password is incorrect" });
@@ -105,3 +103,11 @@ export const login = async (req, res, next) => {
     next(error);
   }
 };
+
+export const logout = async (req, res, next) => {
+  try {
+    res.clearCookie("token").json({ status: "logout-success" });
+  } catch (error) {
+    next(error);
+  }
+}
