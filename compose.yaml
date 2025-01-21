@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  server:
+    build:
+      context: .
+    environment:
+      NODE_ENV: production
+      MONGO_URI: mongodb://mongo:27017/ecommerce_db # MongoDB connection string
+      PORT: 5001
+    ports:
+      - "5001:5000"
+    depends_on:
+      - mongo # Ensure MongoDB starts before the server
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017" # MongoDB port mapping
+    volumes:
+      - mongo-data:/data/db # Persistent storage for MongoDB
+
+volumes:
+  mongo-data: # Volume to persist MongoDB data
